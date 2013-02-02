@@ -1,9 +1,12 @@
-/* Modernizr 2.6.2 (Custom Build) | MIT & BSD
- * Build: http://modernizr.com/download/#-css_pointerevents
- */
-;window.Modernizr=function(a,b,c){function t(a){i.cssText=a}function u(a,b){return t(prefixes.join(a+";")+(b||""))}function v(a,b){return typeof a===b}function w(a,b){return!!~(""+a).indexOf(b)}function x(a,b,d){for(var e in a){var f=b[a[e]];if(f!==c)return d===!1?a[e]:v(f,"function")?f.bind(d||b):f}return!1}var d="2.6.2",e={},f=b.documentElement,g="modernizr",h=b.createElement(g),i=h.style,j,k={}.toString,l={},m={},n={},o=[],p=o.slice,q,r={}.hasOwnProperty,s;!v(r,"undefined")&&!v(r.call,"undefined")?s=function(a,b){return r.call(a,b)}:s=function(a,b){return b in a&&v(a.constructor.prototype[b],"undefined")},Function.prototype.bind||(Function.prototype.bind=function(b){var c=this;if(typeof c!="function")throw new TypeError;var d=p.call(arguments,1),e=function(){if(this instanceof e){var a=function(){};a.prototype=c.prototype;var f=new a,g=c.apply(f,d.concat(p.call(arguments)));return Object(g)===g?g:f}return c.apply(b,d.concat(p.call(arguments)))};return e});for(var y in l)s(l,y)&&(q=y.toLowerCase(),e[q]=l[y](),o.push((e[q]?"":"no-")+q));return e.addTest=function(a,b){if(typeof a=="object")for(var d in a)s(a,d)&&e.addTest(d,a[d]);else{a=a.toLowerCase();if(e[a]!==c)return e;b=typeof b=="function"?b():b,typeof enableClasses!="undefined"&&enableClasses&&(f.className+=" "+(b?"":"no-")+a),e[a]=b}return e},t(""),h=j=null,e._version=d,e}(this,this.document),Modernizr.addTest("pointerevents",function(){var a=document.createElement("x"),b=document.documentElement,c=window.getComputedStyle,d;return"pointerEvents"in a.style?(a.style.pointerEvents="auto",a.style.pointerEvents="x",b.appendChild(a),d=c&&c(a,"").pointerEvents==="auto",b.removeChild(a),!!d):!1});
-
 ;(function($, window, document, undefined){
+
+  var 
+    defaults = {
+      color: "rgba(0,0,0,0.5)",
+      spacing : 5,
+      event : 'click'
+    };
+
 
   // debounce is shamefully stolen from underscore.js , here's their license 
 
@@ -38,127 +41,177 @@
       var context = this, args = arguments;
       var later = function() {
         timeout = null;
-        if (!immediate) result = func.apply(context, args);
+        if (!immediate) {
+          result = func.apply(context, args);
+        }
       };
       var callNow = immediate && !timeout;
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
-      if (callNow) result = func.apply(context, args);
+      if (callNow) {
+        result = func.apply(context, args);
+      }
       return result;
-    };
-  };  
-
-
-  var 
-    defaults = {
-      color: "rgba(0,0,0,0.5)",
-      spacing : 5,
-      event : 'click'
-    };
-
-  function getDimensions(){
-    return {
-      width : Math.max($(window).width(), $(document).width()),
-      height : Math.max($(window).height(), $(document).height())
     };
   }      
 
-  function canvasMask(el, options){
 
-    el = $(el);
+  // developer.mozilla.org/en/CSS/pointer-events
 
+  // Test and project pages:
+  // ausi.github.com/Feature-detection-technique-for-pointer-events/
+  // github.com/ausi/Feature-detection-technique-for-pointer-events/wiki
+  // github.com/Modernizr/Modernizr/issues/80
+
+  function supportsPointerEvents (){
+    var element = document.createElement('x'),
+        documentElement = document.documentElement,
+        getComputedStyle = window.getComputedStyle,
+        supports;
+    if(!('pointerEvents' in element.style)){
+        return false;
+    }
+    element.style.pointerEvents = 'auto';
+    element.style.pointerEvents = 'x';
+    documentElement.appendChild(element);
+    supports = getComputedStyle &&
+        getComputedStyle(element, '').pointerEvents === 'auto';
+    documentElement.removeChild(element);
+    return !!supports;    
+  }
+
+  function CanvasMask(el, options){
+    this.el = $(el);
+    //default to click as mouseleave is not working properly without pointerevents support
+    if (supportsPointerEvents() === false){
+      options.event = 'click';
+    }
+
+    this.options = $.extend( { target : this.el } , defaults, options );
+
+    this.canvas = this.buildCanvas();    
+
+    this.events();
+  }
+
+  CanvasMask.prototype.buildCanvas = function(){
     var 
-      canvas, ctx, 
-      dims = getDimensions();
-
-    options = $.extend({
-      target : el 
-    }, defaults, options);
+      canvas, prev, 
+      dims = this.getDimensions();
 
     canvas = $('<canvas class="canvasmask"/>');
     canvas.attr('width', dims.width);
     canvas.attr('height', dims.height);
 
-    if (Modernizr.pointerevents === false){
-      options.event = 'click';
-    };
-
-    if (options.event === 'hover'){
+    if (this.options.event === 'hover'){
       canvas.css('pointer-events','none');
-    }
+    }    
 
-    var prev = $('canvas.canvasmask');
-
+    //we want to transition if we add another canvas when previous still exists
+    prev = $('canvas.canvasmask');
     if (prev.length) {
       prev.remove();
       canvas.addClass('canvasmask-active');
-    }
+    }     
 
-    ctx = canvas.get(0).getContext('2d'); 
+    return canvas;   
+  };
 
-    function redraw (){
-      var dims = getDimensions();
+  CanvasMask.prototype.redraw = function(){
+    var 
+      dims = this.getDimensions(),
+      ctx = this.canvas.get(0).getContext('2d');
 
-      //empty previous drawing
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      
-      canvas.attr('width', dims.width);
-      canvas.attr('height', dims.height);
-
-      ctx.fillStyle = options.color;
-      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.globalCompositeOperation = 'destination-out'; 
-      ctx.fillStyle = 'rgb(0,0,0)';
-
-      $(options.target).each(function(){
-        var 
-          x = $(this).offset().left - options.spacing,
-          y = $(this).offset().top - options.spacing,
-          w = $(this).outerWidth() + options.spacing * 2,
-          h = $(this).outerHeight() + options.spacing * 2;
-        ctx.fillRect(x, y, w, h);
-      });
-    }
-
-    function closeCanvas ( ) {
-      canvas.removeClass('canvasmask-active');
-      window.setTimeout(function(){
-        canvas.detach();
-      }, 350);
+    //empty previous drawing
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     
-      return false;      
+    this.canvas.attr('width', dims.width);
+    this.canvas.attr('height', dims.height);
+
+    ctx.fillStyle = this.options.color;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.globalCompositeOperation = 'destination-out'; 
+    ctx.fillStyle = 'rgb(0,0,0)';
+
+    $(this.options.target).each($.proxy(function(index, el){
+      var 
+        x = $(el).offset().left - this.options.spacing,
+        y = $(el).offset().top - this.options.spacing,
+        w = $(el).outerWidth() + this.options.spacing * 2,
+        h = $(el).outerHeight() + this.options.spacing * 2;
+
+      ctx.fillRect(x, y, w, h);
+    },this));
+  };
+
+  CanvasMask.prototype.getDimensions = function(){
+    return {
+      width : Math.max($(window).width(), $(document).width()),
+      height : Math.max($(window).height(), $(document).height())
+    };
+  };
+
+  CanvasMask.prototype.close = function(){
+    
+    //animation
+    this.canvas.removeClass('canvasmask-active');
+    
+    window.setTimeout($.proxy(function(){
+      this.canvas.detach();
+    },this), 350);
+  
+    return false;  
+  };
+
+  CanvasMask.prototype.open = function(){
+    this.canvas.appendTo('body');      
+    this.redraw();
+    this.canvas.addClass('canvasmask-active');
+    $(document).on('keydown',$.proxy(this.keydown, this)); 
+  };
+
+  CanvasMask.prototype.keydown = function(e){
+    if (e.keyCode === 27) { 
+      this.close();
+      $(document).off('keydown',this.keydown);
     }
+  };
 
-    //events
-    canvas.on('click', closeCanvas);
+  CanvasMask.prototype.events = function(){
+    this.canvas.on('click', $.proxy(this.close, this));
 
-    function keydown(e){
-      //esc key
-      if (e.keyCode === 27) { 
-        closeCanvas();
-        $(document).off('keydown',keydown);
-      }
-    }
+    $(window).on('resize', debounce($.proxy(this.redraw, this), 100));
 
-    function openCanvas ( ) {
-      canvas.appendTo('body');      
-      redraw();
-      canvas.addClass('canvasmask-active');
-      $(document).on('keydown',keydown);  
+    if (this.options.event === 'hover') {
+      return this.el.hover($.proxy(this.open, this), $.proxy(this.close, this));  
     }    
 
-    $(window).on('resize', debounce(redraw, 100));
-
-    if (options.event === 'click'){
-      return el.on('click', openCanvas);
-    }
-
-    return el.hover(openCanvas, closeCanvas);
-  }
+    if (this.options.event === 'click'){
+      return this.el.on('click', $.proxy(this.open,this));
+    }      
+  };
 
   $.fn.canvasMask = function ( options ) {
     return $(this).each(function(){
-      canvasMask(this, options);
+
+      var cm = $(this).data('canvasmask');
+      
+      if (options === 'open'){
+        if (!cm) {
+          throw "Mask not initialized";
+        }
+        return cm.open();
+      }
+
+      if (options === 'close'){
+        if (!cm) {
+          throw "Mask not initialized";
+        }
+        return cm.close();
+      }      
+
+      cm = new CanvasMask( this , options );
+      return $(this).data('canvasmask' , cm);
     });
   };
 
