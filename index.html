@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>jQuery Canvas Mask</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="canvasmask.css">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+  <script src="jquery.canvasmask.js"></script>
+</head>
+<body>
+  <div id="a"></div>
+  <div id="b"></div>
+  <div id="c"></div>
+  <div id="d"></div>
+
+  <script>
+    $('#a, #b, #c').canvasMask({
+      event : 'hover' //requires pointer-events support
+    });
+
+    $('#d').canvasMask({
+      event : 'click',
+      target : 'div',
+      color : '#fcf'
+    })
+
+  </script>
+
+  <p>*Hover works if <code>pointer-events: none</code> is available (meaning IE is screwed for now). Defaults to click otherwise</p>
+</body>
+</html>
+

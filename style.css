@@ -1,0 +1,15 @@
+body { margin: 0; padding: 0; }
+div { position: absolute; width: 200px; height: 200px; }
+div:before { position: absolute; font: bold 12px/1 Helvetica,Arial,sans-serif; color: #fff; }
+
+#a { left: 100px; top: 50px; background: rgba(0,0,150,0.5); }
+ #a:before { left: 10px; top: 10px; content: "Hooooover heeeere!";}
+#b { left: 150px; top: 150px; background: rgba(0,150,0,0.5);  }
+ #b:before { left: 10px; bottom: 10px; content: "Noo, on meee!";}
+#c { left: 200px; top: 100px; background: rgba(150,0,0,0.5); }
+ #c:before { right: 10px; top: 10px; content: "Hoooooooooover!";}
+
+ #d { right: 50px; bottom: 50px; background: rgba(150,0,150,0.5); }
+  #d:before { right: 10px; left: 10; top: 50%; margin-top: -0.5em; content: "Forget these losers, CLICK ME!";}
+
+p { position: absolute; z-index: 10000; left: 10px; bottom: 10px; font: 12px/1.25 Helvetica,Arial,sans-serif; color: #000; margin: 0; } 

@@ -1,0 +1,14 @@
+.canvasmask { 
+  position: absolute; 
+  left: 0; 
+  top: 0; 
+  z-index: 5000; 
+  opacity: 0; 
+  -webkit-transition: opacity 0.3s ease; 
+  -moz-transition: opacity 0.3s ease; 
+  -o-transition: opacity 0.3s ease; 
+  transition: opacity 0.3s ease; 
+}
+.canvasmask.canvasmask-active { 
+  opacity: 1; 
+}
